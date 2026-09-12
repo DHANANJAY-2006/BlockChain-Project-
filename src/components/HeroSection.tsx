@@ -136,7 +136,7 @@ export default function HeroSection() {
           Upload any video, image, or audio file. Our AI analyzes it for deepfake signatures and the
           result is{' '}
           <span className="text-neon-blue font-semibold">permanently sealed</span> on an{' '}
-          <span className="text-neon-purple font-semibold">immutable blockchain</span> — tamper-proof and publicly verifiable.
+          <span className="text-neon-purple font-semibold">immutable blockchain</span> — cryptographically secure and publicly verifiable.
         </p>
 
         {/* CTAs */}

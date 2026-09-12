@@ -102,27 +102,7 @@ export default function FeaturesSection() {
           })}
         </div>
 
-        {/* Trust badges */}
-        <div className="glass neon-border-blue rounded-2xl p-8">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-black text-white mb-2">Trusted by the Fight Against Disinformation</h3>
-            <p className="text-gray-400 text-sm">ChainProof provides military-grade verification infrastructure</p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: Users, label: 'Verifications', value: '2.4M+', color: 'text-neon-blue' },
-              { icon: Shield, label: 'Deepfakes Stopped', value: '847K+', color: 'text-red-400' },
-              { icon: Globe, label: 'Countries', value: '127', color: 'text-neon-green' },
-              { icon: Award, label: 'Accuracy Rating', value: 'A+', color: 'text-neon-purple' },
-            ].map(({ icon: Icon, label, value, color }) => (
-              <div key={label} className="text-center">
-                <Icon className={`w-8 h-8 ${color} mx-auto mb-2`} />
-                <div className={`text-3xl font-black font-mono ${color}`}>{value}</div>
-                <div className="text-sm text-gray-400">{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+
       </div>
     </section>
   );
