@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Upload, File, X, Shield, AlertTriangle, CheckCircle, Loader2, Hash, Clock, Cpu, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { getBlockchain } from '@/lib/blockchain';
-import { Block, BlockData } from '@/lib/types';
+import { Block, BlockData, AnalysisDetails } from '@/lib/types';
 
 type AnalysisState = 'idle' | 'uploading' | 'hashing' | 'analyzing' | 'writing' | 'done';
 type AnalysisResult = 'AUTHENTIC' | 'DEEPFAKE' | 'SUSPICIOUS';
@@ -13,7 +13,7 @@ interface AnalysisData {
   confidence: number;
   mediaHash: string;
   block: Block;
-  details: Record<string, number>;
+  details: AnalysisDetails;
 }
 
 export default function VerifySection() {
