@@ -31,8 +31,8 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 flex items-center justify-center">
-                <img src="/logo.png" alt="ChainProof Logo" className="w-full h-full object-contain" />
+              <div className="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden bg-white/5 border border-white/10">
+                <img src="/logo.png" alt="ChainProof Logo" className="w-full h-full object-cover" />
               </div>
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-neon-green rounded-full animate-pulse" />
             </div>
