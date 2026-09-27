@@ -13,8 +13,8 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-neon-blue to-neon-purple flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 flex items-center justify-center">
+                <img src="/logo.png" alt="ChainProof Logo" className="w-full h-full object-contain" />
               </div>
               <div>
                 <span className="text-xl font-bold gradient-text-blue-purple">ChainProof</span>
