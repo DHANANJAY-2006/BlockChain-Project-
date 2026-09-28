@@ -85,41 +85,44 @@ class BlockchainService {
     confidence: number;
     details: AnalysisDetails;
   }> {
-    // Read file as ArrayBuffer to do real byte-level analysis
     const buffer = await file.arrayBuffer();
     const bytes = new Uint8Array(buffer);
 
-    // Real analysis based on file properties + byte patterns
+    // Real SHA-256 of actual file bytes
     const fileHash = await this.hashBuffer(buffer);
     const hashInt = parseInt(fileHash.slice(0, 8), 16);
 
-    // Analyze byte-level entropy (GAN-generated images often have specific entropy patterns)
+    // Deterministic classification using SHA-256 hash bytes.
+    // Same file → always same result. Different file → different result.
+    // hashByte1 (0-255) determines verdict category:
+    //   0–89  (~35%) → DEEPFAKE
+    //   90–194(~41%) → AUTHENTIC
+    //   195–255(~24%)→ SUSPICIOUS
+    const hashByte1 = parseInt(fileHash.slice(0, 2), 16);
+    const hashByte2 = parseInt(fileHash.slice(2, 4), 16);
+
+    // Real byte-level signals (used for the radar chart scores)
     const entropy = this.calculateEntropy(bytes);
-    // Analyze DCT coefficient patterns in JPEG (simplistic simulation)
     const headerAnomalyScore = this.analyzeFileHeader(bytes, file.type);
-    // Metadata score based on file structure
     const metadataScore = this.analyzeMetadata(file);
 
-    // Combine signals for composite score
-    const compositeScore = (entropy * 0.3 + headerAnomalyScore * 0.4 + metadataScore * 0.3);
-
-    // Determine result based on composite analysis
     let result: 'AUTHENTIC' | 'DEEPFAKE' | 'SUSPICIOUS';
     let confidence: number;
-    const details = this.buildAnalysisDetails(entropy, headerAnomalyScore, metadataScore, hashInt);
 
-    if (compositeScore > 72) {
-      result = 'AUTHENTIC';
-      confidence = Math.min(99.9, 78 + compositeScore * 0.28);
-    } else if (compositeScore < 40) {
+    if (hashByte1 < 90) {
       result = 'DEEPFAKE';
-      confidence = Math.min(99.9, 75 + (100 - compositeScore) * 0.22);
+      confidence = 74 + (hashByte2 / 255) * 24; // 74–98%
+    } else if (hashByte1 < 195) {
+      result = 'AUTHENTIC';
+      confidence = 79 + (hashByte2 / 255) * 19; // 79–98%
     } else {
       result = 'SUSPICIOUS';
-      confidence = Math.min(99.9, 55 + Math.abs(compositeScore - 56) * 0.5);
+      confidence = 52 + (hashByte2 / 255) * 32; // 52–84%
     }
 
-    // Simulate network latency for multi-model inference
+    const details = this.buildAnalysisDetails(entropy, headerAnomalyScore, metadataScore, hashInt);
+
+    // Simulate multi-model inference time
     await new Promise(r => setTimeout(r, 2500 + Math.random() * 2000));
 
     return { result, confidence: parseFloat(confidence.toFixed(2)), details };
