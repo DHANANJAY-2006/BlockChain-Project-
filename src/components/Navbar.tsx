@@ -16,10 +16,11 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '#home', label: 'Home' },
-    { href: '#verify', label: 'Verify Media' },
-    { href: '#blockchain', label: 'Blockchain' },
-    { href: '#how-it-works', label: 'How It Works' },
-    { href: '#stats', label: 'Network Stats' },
+    { href: '#verify', label: 'Verify' },
+    { href: '#compare', label: 'Compare' },
+    { href: '#threat-feed', label: 'Threat Feed' },
+    { href: '#blockchain', label: 'Explorer' },
+    { href: '#stats', label: 'Stats' },
   ];
 
   return (
