@@ -12,11 +12,13 @@ interface NewsItem {
   link: string;
   pubDate: string;
   description: string;
+  source?: string;
   thumbnail?: string;
 }
 
 interface RSS2JSONResponse {
   status: string;
+  source?: 'reddit' | 'curated';
   items: NewsItem[];
 }
 
@@ -77,27 +79,30 @@ export default function ThreatFeedSection() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsOnline, setNewsOnline] = useState(false);
+  const [newsSource, setNewsSource] = useState<'reddit' | 'curated' | null>(null);
   const [simEvents, setSimEvents] = useState<SimEvent[]>(() =>
     Array.from({ length: 10 }, makeSimEvent)
   );
   const [dfCount, setDfCount] = useState(0);
   const [totalCount, setTotalCount] = useState(10);
 
-  // ── Fetch real deepfake news via our own server-side API route (no CORS) ──────
+  // ── Fetch via server-side /api/news — always returns data (curated fallback) ──
   const fetchNews = async () => {
     setNewsLoading(true);
     try {
-      // /api/news runs on Vercel server-side — no CORS issues at all
       const res = await fetch('/api/news', { cache: 'no-store' });
       const data: RSS2JSONResponse = await res.json();
       if (data.status === 'ok' && data.items?.length > 0) {
         setNews(data.items.slice(0, 15));
         setNewsOnline(true);
+        setNewsSource(data.source ?? 'curated');
       } else {
         setNewsOnline(false);
+        setNewsSource(null);
       }
     } catch {
       setNewsOnline(false);
+      setNewsSource(null);
     } finally {
       setNewsLoading(false);
     }
@@ -146,7 +151,7 @@ export default function ThreatFeedSection() {
             <span className="text-white"> Incidents</span>
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Real news about deepfake incidents happening globally, fetched live from Google News — plus a simulated live detection stream.
+            Real documented deepfake incidents from BBC, Reuters, The Guardian and more — plus a live simulated detection stream.
           </p>
         </div>
 
@@ -155,14 +160,22 @@ export default function ThreatFeedSection() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Newspaper className="w-5 h-5 text-neon-blue" />
-              <h3 className="text-lg font-bold text-white">Real Deepfake News</h3>
-              <span className={`text-xs font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 ${
-                newsOnline
-                  ? 'text-neon-green border-neon-green/30 bg-neon-green/10'
-                  : 'text-red-400 border-red-500/30 bg-red-500/10'
-              }`}>
-                {newsOnline ? <><Wifi className="w-3 h-3" /> LIVE</> : <><WifiOff className="w-3 h-3" /> OFFLINE</>}
-              </span>
+              <h3 className="text-lg font-bold text-white">Real Deepfake Incidents</h3>
+              {newsSource === 'reddit' && (
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 text-neon-green border-neon-green/30 bg-neon-green/10">
+                  <Wifi className="w-3 h-3" /> LIVE — Reddit
+                </span>
+              )}
+              {newsSource === 'curated' && (
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 text-neon-blue border-neon-blue/30 bg-neon-blue/10">
+                  <CheckCircle className="w-3 h-3" /> VERIFIED — Real Cases
+                </span>
+              )}
+              {!newsSource && !newsLoading && (
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 text-red-400 border-red-500/30 bg-red-500/10">
+                  <WifiOff className="w-3 h-3" /> OFFLINE
+                </span>
+              )}
             </div>
             <button
               onClick={fetchNews}
