@@ -18,7 +18,7 @@ interface NewsItem {
 
 interface RSS2JSONResponse {
   status: string;
-  source?: 'reddit' | 'hackernews' | 'curated';
+  source?: 'reddit' | 'hackernews';
   items: NewsItem[];
 }
 
@@ -79,7 +79,7 @@ export default function ThreatFeedSection() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsOnline, setNewsOnline] = useState(false);
-  const [newsSource, setNewsSource] = useState<'reddit' | 'hackernews' | 'curated' | null>(null);
+  const [newsSource, setNewsSource] = useState<'reddit' | 'hackernews' | null>(null);
   const [simEvents, setSimEvents] = useState<SimEvent[]>(() =>
     Array.from({ length: 10 }, makeSimEvent)
   );
@@ -95,7 +95,7 @@ export default function ThreatFeedSection() {
       if (data.status === 'ok' && data.items?.length > 0) {
         setNews(data.items.slice(0, 15));
         setNewsOnline(true);
-        setNewsSource(data.source ?? 'curated');
+        setNewsSource(data.source ?? 'hackernews');
       } else {
         setNewsOnline(false);
         setNewsSource(null);
@@ -166,11 +166,6 @@ export default function ThreatFeedSection() {
                   <Wifi className="w-3 h-3" /> LIVE — {newsSource === 'hackernews' ? 'Hacker News' : 'Reddit'}
                 </span>
               )}
-              {newsSource === 'curated' && (
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 text-neon-blue border-neon-blue/30 bg-neon-blue/10">
-                  <CheckCircle className="w-3 h-3" /> VERIFIED — Real Cases
-                </span>
-              )}
               {!newsSource && !newsLoading && (
                 <span className="text-xs font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 text-red-400 border-red-500/30 bg-red-500/10">
                   <WifiOff className="w-3 h-3" /> OFFLINE
@@ -190,14 +185,14 @@ export default function ThreatFeedSection() {
           {newsLoading ? (
             <div className="glass neon-border-blue rounded-2xl p-12 text-center">
               <Loader2 className="w-10 h-10 text-neon-blue animate-spin mx-auto mb-3" />
-              <p className="text-gray-400">Fetching live deepfake news from Google News...</p>
-              <p className="text-xs text-gray-600 mt-1 font-mono">api.rss2json.com → news.google.com/rss</p>
+              <p className="text-gray-400">Fetching live deepfake stories from Hacker News...</p>
+              <p className="text-xs text-gray-600 mt-1 font-mono">hn.algolia.com/api/v1/search?query=deepfake</p>
             </div>
           ) : !newsOnline ? (
             <div className="glass border border-red-500/30 rounded-2xl p-8 text-center">
               <WifiOff className="w-10 h-10 text-red-400 mx-auto mb-3" />
-              <p className="text-gray-400 mb-2">Could not fetch live news (network issue or API limit reached)</p>
-              <p className="text-xs text-gray-600">Live simulation below is still running</p>
+              <p className="text-gray-400 mb-2">Could not reach Hacker News API</p>
+              <p className="text-xs text-gray-600">Check your connection and try again</p>
               <button onClick={fetchNews} className="mt-4 btn-secondary px-4 py-2 rounded-lg text-sm">
                 Try Again
               </button>
