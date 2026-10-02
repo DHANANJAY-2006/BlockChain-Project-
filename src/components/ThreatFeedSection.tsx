@@ -83,18 +83,12 @@ export default function ThreatFeedSection() {
   const [dfCount, setDfCount] = useState(0);
   const [totalCount, setTotalCount] = useState(10);
 
-  // ── Fetch real deepfake news from Google News RSS via rss2json (free, no key) ──
+  // ── Fetch real deepfake news via our own server-side API route (no CORS) ──────
   const fetchNews = async () => {
     setNewsLoading(true);
     try {
-      const query = encodeURIComponent('deepfake AI fake video detected');
-      const rssUrl = encodeURIComponent(
-        `https://news.google.com/rss/search?q=${query}&hl=en-US&gl=US&ceid=US:en`
-      );
-      const res = await fetch(
-        `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&count=15`,
-        { cache: 'no-store' }
-      );
+      // /api/news runs on Vercel server-side — no CORS issues at all
+      const res = await fetch('/api/news', { cache: 'no-store' });
       const data: RSS2JSONResponse = await res.json();
       if (data.status === 'ok' && data.items?.length > 0) {
         setNews(data.items.slice(0, 15));
