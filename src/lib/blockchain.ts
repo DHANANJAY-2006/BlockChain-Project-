@@ -109,10 +109,12 @@ class BlockchainService {
     let result: 'AUTHENTIC' | 'DEEPFAKE' | 'SUSPICIOUS';
     let confidence: number;
 
-    if (hashByte1 < 90) {
+    // Threshold split: ~50% DEEPFAKE, ~35% AUTHENTIC, ~15% SUSPICIOUS
+    // This ensures demos reliably see all three verdicts across a few files
+    if (hashByte1 < 128) {
       result = 'DEEPFAKE';
       confidence = 74 + (hashByte2 / 255) * 24; // 74–98%
-    } else if (hashByte1 < 195) {
+    } else if (hashByte1 < 218) {
       result = 'AUTHENTIC';
       confidence = 79 + (hashByte2 / 255) * 19; // 79–98%
     } else {
