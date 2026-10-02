@@ -18,7 +18,7 @@ interface NewsItem {
 
 interface RSS2JSONResponse {
   status: string;
-  source?: 'reddit' | 'curated';
+  source?: 'reddit' | 'hackernews' | 'curated';
   items: NewsItem[];
 }
 
@@ -79,7 +79,7 @@ export default function ThreatFeedSection() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsOnline, setNewsOnline] = useState(false);
-  const [newsSource, setNewsSource] = useState<'reddit' | 'curated' | null>(null);
+  const [newsSource, setNewsSource] = useState<'reddit' | 'hackernews' | 'curated' | null>(null);
   const [simEvents, setSimEvents] = useState<SimEvent[]>(() =>
     Array.from({ length: 10 }, makeSimEvent)
   );
@@ -161,9 +161,9 @@ export default function ThreatFeedSection() {
             <div className="flex items-center gap-2">
               <Newspaper className="w-5 h-5 text-neon-blue" />
               <h3 className="text-lg font-bold text-white">Real Deepfake Incidents</h3>
-              {newsSource === 'reddit' && (
+              {(newsSource === 'reddit' || newsSource === 'hackernews') && (
                 <span className="text-xs font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 text-neon-green border-neon-green/30 bg-neon-green/10">
-                  <Wifi className="w-3 h-3" /> LIVE — Reddit
+                  <Wifi className="w-3 h-3" /> LIVE — {newsSource === 'hackernews' ? 'Hacker News' : 'Reddit'}
                 </span>
               )}
               {newsSource === 'curated' && (
