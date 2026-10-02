@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Shield, Hash, Clock, Database, Cpu, Link, ArrowRight, Info } from 'lucide-react';
 import { getBlockchain } from '@/lib/blockchain';
 import { Block } from '@/lib/types';
+import ConsensusTerminal from './ConsensusTerminal';
 
 export default function BlockchainSection() {
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -66,9 +67,10 @@ export default function BlockchainSection() {
             <span className="gradient-text-blue-purple">Immutable</span>
             <span className="text-white"> Ledger</span>
           </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
+          <p className="text-gray-400 max-w-2xl mx-auto mb-10">
             Every verification you submit is permanently recorded here. Tamper-proof and cryptographically linked.
           </p>
+          <ConsensusTerminal />
         </div>
 
         {/* Chain status */}
