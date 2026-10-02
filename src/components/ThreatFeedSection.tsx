@@ -2,26 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import {
-  AlertTriangle, Radio, ExternalLink, Newspaper,
-  Loader2, RefreshCw, Globe, Zap, CheckCircle, Eye, Wifi, WifiOff
+  AlertTriangle, Radio, Globe, Zap
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface NewsItem {
-  title: string;
-  link: string;
-  pubDate: string;
-  description: string;
-  source?: string;
-  thumbnail?: string;
-}
-
-interface RSS2JSONResponse {
-  status: string;
-  source?: 'reddit' | 'hackernews';
-  items: NewsItem[];
-}
-
 interface SimEvent {
   id: string;
   time: string;
@@ -37,24 +21,6 @@ const COUNTRIES = ['US', 'UK', 'IN', 'DE', 'BR', 'JP', 'FR', 'CA', 'AU', 'KR', '
 
 function rndHex(n: number) {
   return Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-}
-
-function getDomain(url: string) {
-  try { return new URL(url).hostname.replace('www.', ''); }
-  catch { return 'news.source'; }
-}
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const h = Math.floor(diff / 3_600_000);
-  const d = Math.floor(h / 24);
-  if (d > 0) return `${d}d ago`;
-  if (h > 0) return `${h}h ago`;
-  return 'Just now';
-}
-
-function stripHtml(html: string) {
-  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').slice(0, 120) + '...';
 }
 
 function makeSimEvent(): SimEvent {
@@ -76,41 +42,11 @@ function makeSimEvent(): SimEvent {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ThreatFeedSection() {
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [newsLoading, setNewsLoading] = useState(true);
-  const [newsOnline, setNewsOnline] = useState(false);
-  const [newsSource, setNewsSource] = useState<'reddit' | 'hackernews' | null>(null);
   const [simEvents, setSimEvents] = useState<SimEvent[]>(() =>
     Array.from({ length: 10 }, makeSimEvent)
   );
   const [dfCount, setDfCount] = useState(0);
   const [totalCount, setTotalCount] = useState(10);
-
-  // ── Fetch via server-side /api/news — always returns data (curated fallback) ──
-  const fetchNews = async () => {
-    setNewsLoading(true);
-    try {
-      const res = await fetch('/api/news', { cache: 'no-store' });
-      const data: RSS2JSONResponse = await res.json();
-      if (data.status === 'ok' && data.items?.length > 0) {
-        setNews(data.items.slice(0, 15));
-        setNewsOnline(true);
-        setNewsSource(data.source ?? 'hackernews');
-      } else {
-        setNewsOnline(false);
-        setNewsSource(null);
-      }
-    } catch {
-      setNewsOnline(false);
-      setNewsSource(null);
-    } finally {
-      setNewsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchNews();
-  }, []);
 
   // ── Simulated live detection stream ──────────────────────────────────────────
   useEffect(() => {
@@ -143,7 +79,7 @@ export default function ThreatFeedSection() {
           <div className="inline-flex items-center gap-2 bg-red-500/10 border border-red-500/30 px-4 py-2 rounded-full text-sm mb-6">
             <Radio className="w-4 h-4 text-red-400 animate-pulse" />
             <span className="text-red-400 font-mono">GLOBAL THREAT INTELLIGENCE</span>
-            <div className={`w-2 h-2 rounded-full animate-pulse ${newsOnline ? 'bg-neon-green' : 'bg-red-400'}`} />
+            <div className="w-2 h-2 rounded-full animate-pulse bg-red-400" />
           </div>
           <h2 className="text-4xl sm:text-5xl font-black mb-4">
             <span className="text-white">Real-World </span>
@@ -151,82 +87,8 @@ export default function ThreatFeedSection() {
             <span className="text-white"> Incidents</span>
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Real documented deepfake incidents from BBC, Reuters, The Guardian and more — plus a live simulated detection stream.
+            Simulated global threat intelligence stream showing deepfake detections in real-time across the network.
           </p>
-        </div>
-
-        {/* ── PART 1: REAL NEWS ──────────────────────────────────────────────── */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Newspaper className="w-5 h-5 text-neon-blue" />
-              <h3 className="text-lg font-bold text-white">Real Deepfake Incidents</h3>
-              {(newsSource === 'reddit' || newsSource === 'hackernews') && (
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 text-neon-green border-neon-green/30 bg-neon-green/10">
-                  <Wifi className="w-3 h-3" /> LIVE — {newsSource === 'hackernews' ? 'Hacker News' : 'Reddit'}
-                </span>
-              )}
-              {!newsSource && !newsLoading && (
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 text-red-400 border-red-500/30 bg-red-500/10">
-                  <WifiOff className="w-3 h-3" /> OFFLINE
-                </span>
-              )}
-            </div>
-            <button
-              onClick={fetchNews}
-              disabled={newsLoading}
-              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-neon-blue transition-colors glass neon-border-blue px-3 py-1.5 rounded-lg"
-            >
-              <RefreshCw className={`w-3 h-3 ${newsLoading ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
-          </div>
-
-          {newsLoading ? (
-            <div className="glass neon-border-blue rounded-2xl p-12 text-center">
-              <Loader2 className="w-10 h-10 text-neon-blue animate-spin mx-auto mb-3" />
-              <p className="text-gray-400">Fetching live deepfake stories from Hacker News...</p>
-              <p className="text-xs text-gray-600 mt-1 font-mono">hn.algolia.com/api/v1/search?query=deepfake</p>
-            </div>
-          ) : !newsOnline ? (
-            <div className="glass border border-red-500/30 rounded-2xl p-8 text-center">
-              <WifiOff className="w-10 h-10 text-red-400 mx-auto mb-3" />
-              <p className="text-gray-400 mb-2">Could not reach Hacker News API</p>
-              <p className="text-xs text-gray-600">Check your connection and try again</p>
-              <button onClick={fetchNews} className="mt-4 btn-secondary px-4 py-2 rounded-lg text-sm">
-                Try Again
-              </button>
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {news.map((item, i) => (
-                <a
-                  key={i}
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="glass neon-border-blue rounded-xl p-4 flex flex-col gap-2 hover:bg-neon-blue/5 transition-all hover:scale-[1.01] group"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="w-2 h-2 bg-red-400 rounded-full flex-shrink-0 mt-1.5 animate-pulse" />
-                    <p className="text-sm text-white font-medium leading-snug flex-1 group-hover:text-neon-blue transition-colors line-clamp-3">
-                      {item.title}
-                    </p>
-                    <ExternalLink className="w-3 h-3 text-gray-600 flex-shrink-0 mt-0.5 group-hover:text-neon-blue transition-colors" />
-                  </div>
-                  {item.description && (
-                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
-                      {stripHtml(item.description)}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between mt-auto pt-1 border-t border-dark-border">
-                    <span className="text-xs text-gray-600 font-mono">{getDomain(item.link)}</span>
-                    <span className="text-xs text-gray-600">{timeAgo(item.pubDate)}</span>
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* ── PART 2: SIMULATED LIVE STREAM ─────────────────────────────────── */}
@@ -286,7 +148,6 @@ export default function ThreatFeedSection() {
                   { label: 'Total Events', value: totalCount, color: 'text-neon-blue' },
                   { label: 'Deepfakes', value: dfCount, color: 'text-red-400' },
                   { label: 'Detection Rate', value: totalCount > 0 ? `${Math.round((dfCount / totalCount) * 100)}%` : '0%', color: 'text-neon-purple' },
-                  { label: 'Real News Stories', value: news.length, color: 'text-neon-green' },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="flex justify-between items-center">
                     <span className="text-xs text-gray-500">{label}</span>
@@ -323,10 +184,7 @@ export default function ThreatFeedSection() {
             <div className="glass neon-border-green rounded-2xl p-4">
               <h3 className="text-xs font-bold text-neon-green mb-2">DATA SOURCES</h3>
               <div className="space-y-1.5 text-xs text-gray-500">
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="w-3 h-3 text-neon-green flex-shrink-0 mt-0.5" />
-                  <span>Real news via Google News RSS + rss2json.com API</span>
-                </div>
+
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-3 h-3 text-yellow-400 flex-shrink-0 mt-0.5" />
                   <span>Detection stream is simulated (shows production-scale visualization)</span>
