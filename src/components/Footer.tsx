@@ -1,16 +1,12 @@
 'use client';
-
 import { Shield, Github, Twitter, ExternalLink, Heart, Lock, Zap } from 'lucide-react';
-
 export default function Footer() {
   return (
     <footer className="relative border-t border-dark-border">
       <div className="absolute inset-0 cyber-grid-bg opacity-30" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neon-blue/50 to-transparent" />
-      
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          {/* Brand */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden bg-white/5 border border-white/10">
@@ -34,8 +30,6 @@ export default function Footer() {
               </a>
             </div>
           </div>
-
-          {/* Links */}
           <div>
             <h3 className="text-sm font-bold text-white mb-4">System</h3>
             <div className="space-y-2">
@@ -46,7 +40,6 @@ export default function Footer() {
               ))}
             </div>
           </div>
-
           <div>
             <h3 className="text-sm font-bold text-white mb-4">Technology</h3>
             <div className="space-y-2">
@@ -62,7 +55,6 @@ export default function Footer() {
                 </div>
               ))}
             </div>
-            
             <div className="mt-6">
               <div className="glass neon-border-green rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -75,8 +67,6 @@ export default function Footer() {
             </div>
           </div>
         </div>
-
-        {/* Bottom bar */}
         <div className="border-t border-dark-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-600 text-center sm:text-left">
             © 2024 ChainProof. Built by{' '}

@@ -1,5 +1,3 @@
-// Blockchain types for deepfake detection
-
 export interface BlockData {
   mediaHash: string;
   analysisResult: 'AUTHENTIC' | 'DEEPFAKE' | 'SUSPICIOUS';
@@ -11,7 +9,6 @@ export interface BlockData {
   analysisDetails: AnalysisDetails;
   submitterAddress: string;
 }
-
 export interface AnalysisDetails {
   faceConsistencyScore: number;
   temporalConsistencyScore: number;
@@ -20,7 +17,6 @@ export interface AnalysisDetails {
   compressionAnomalyScore: number;
   lightingConsistencyScore: number;
 }
-
 export interface Block {
   index: number;
   timestamp: number;
@@ -31,7 +27,6 @@ export interface Block {
   merkleRoot: string;
   validator: string;
 }
-
 export interface Transaction {
   id: string;
   blockIndex: number;
@@ -43,7 +38,6 @@ export interface Transaction {
   gasUsed: number;
   fileName: string;
 }
-
 export interface NetworkStats {
   totalBlocks: number;
   totalVerifications: number;

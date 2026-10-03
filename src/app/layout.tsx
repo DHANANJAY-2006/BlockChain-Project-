@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import './globals.css'
-
 export const metadata: Metadata = {
   title: 'ChainProof | Blockchain DeepFake Detection System',
   description: 'Advanced AI-powered deepfake detection secured by immutable blockchain technology. Verify media authenticity with cryptographic proof.',
@@ -11,7 +10,6 @@ export const metadata: Metadata = {
     type: 'website',
   },
 }
-
 export default function RootLayout({
   children,
 }: {

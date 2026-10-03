@@ -1,26 +1,21 @@
 'use client';
-
 import { useState, useCallback, useRef } from 'react';
 import { Upload, Shield, AlertTriangle, CheckCircle, Eye, Loader2, X, GitCompare, Hash, ArrowRight } from 'lucide-react';
 import { getBlockchain } from '@/lib/blockchain';
-
 interface FileState {
   file: File;
   hash: string | null;
   status: 'ready' | 'hashing' | 'hashed';
   previewUrl: string | null;
 }
-
 function formatHash(h: string) {
   return `${h.slice(0, 8)}...${h.slice(-8)}`;
 }
-
 function formatBytes(b: number) {
   if (b < 1024) return b + ' B';
   if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
   return (b / (1024 * 1024)).toFixed(2) + ' MB';
 }
-
 function DropZone({
   label,
   state,
@@ -36,24 +31,20 @@ function DropZone({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
-
   const accentClasses = accent === 'blue'
     ? { border: 'border-neon-blue/40', hover: 'hover:border-neon-blue', icon: 'text-neon-blue', badge: 'text-neon-blue neon-border-blue', ring: 'neon-border-blue' }
     : { border: 'border-neon-purple/40', hover: 'hover:border-neon-purple', icon: 'text-neon-purple', badge: 'text-neon-purple neon-border-purple', ring: 'neon-border-purple' };
-
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) onFile(file);
   }, [onFile]);
-
   return (
     <div className="flex-1 min-w-0">
       <div className="text-xs font-mono text-gray-500 mb-2 flex items-center gap-2">
         <span className={accentClasses.icon}>●</span> {label}
       </div>
-
       {!state ? (
         <div
           onDragOver={e => { e.preventDefault(); setDragging(true); }}
@@ -97,7 +88,6 @@ function DropZone({
     </div>
   );
 }
-
 export default function CompareSection() {
   const [fileA, setFileA] = useState<FileState | null>(null);
   const [fileB, setFileB] = useState<FileState | null>(null);
@@ -105,52 +95,40 @@ export default function CompareSection() {
   const [comparisonDone, setComparisonDone] = useState(false);
   const [identical, setIdentical] = useState(false);
   const [similarity, setSimilarity] = useState(0);
-
   const handleFile = async (file: File, slot: 'A' | 'B') => {
     const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
     const state: FileState = { file, hash: null, status: 'hashing', previewUrl: preview };
-
     if (slot === 'A') setFileA(state);
     else setFileB(state);
     setComparisonDone(false);
-
     const bc = getBlockchain();
     const hash = await bc.hashFile(file);
-
     const done: FileState = { ...state, hash, status: 'hashed' };
     if (slot === 'A') setFileA(done);
     else setFileB(done);
   };
-
   const compare = async () => {
     if (!fileA?.hash || !fileB?.hash) return;
     setComparing(true);
     await new Promise(r => setTimeout(r, 1800));
-
     const hashA = fileA.hash;
     const hashB = fileB.hash;
     const isIdentical = hashA === hashB;
-
-    // Byte-level similarity: count matching nibbles in first 16 bytes of hash
     let matching = 0;
     const compareLen = 32;
     for (let i = 0; i < compareLen; i++) {
       if (hashA[i] === hashB[i]) matching++;
     }
     const sim = isIdentical ? 100 : Math.round((matching / compareLen) * 100);
-
     setIdentical(isIdentical);
     setSimilarity(sim);
     setComparing(false);
     setComparisonDone(true);
   };
-
   const canCompare = fileA?.status === 'hashed' && fileB?.status === 'hashed';
-
   return (
     <section id="compare" className="relative py-24">
       <div className="absolute inset-0 bg-gradient-to-b from-dark-bg to-dark-card/30" />
-
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 glass neon-border-purple px-4 py-2 rounded-full text-sm mb-6">
@@ -165,9 +143,7 @@ export default function CompareSection() {
             Upload two files to compare their cryptographic fingerprints. Detect if a file has been manipulated from an original, or if they are identical.
           </p>
         </div>
-
         <div className="glass neon-border-purple rounded-2xl p-6">
-          {/* Drop zones */}
           <div className="flex items-start gap-4 mb-6">
             <DropZone label="FILE A — ORIGINAL" state={fileA} onFile={f => handleFile(f, 'A')} onClear={() => { setFileA(null); setComparisonDone(false); }} accent="blue" />
             <div className="flex flex-col items-center justify-center pt-12">
@@ -178,8 +154,6 @@ export default function CompareSection() {
             </div>
             <DropZone label="FILE B — SUSPECT" state={fileB} onFile={f => handleFile(f, 'B')} onClear={() => { setFileB(null); setComparisonDone(false); }} accent="purple" />
           </div>
-
-          {/* Compare button */}
           <button
             onClick={compare}
             disabled={!canCompare || comparing}
@@ -195,8 +169,6 @@ export default function CompareSection() {
               <><Hash className="w-5 h-5" /> Run SHA-256 Comparison</>
             )}
           </button>
-
-          {/* Result */}
           {comparisonDone && fileA?.hash && fileB?.hash && (
             <div className={`rounded-xl border p-6 ${identical ? 'bg-neon-green/5 border-neon-green/30' : similarity > 30 ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-red-500/5 border-red-500/30'}`}>
               <div className="text-center mb-6">
@@ -208,14 +180,11 @@ export default function CompareSection() {
                   <><AlertTriangle className="w-14 h-14 text-red-400 mx-auto mb-2" /><div className="text-2xl font-black text-red-400">COMPLETELY DIFFERENT FILES</div><p className="text-gray-400 text-sm mt-1">These files share no significant hash patterns.</p></>
                 )}
               </div>
-
-              {/* Hash comparison visual */}
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
                 {[{ label: 'File A SHA-256', hash: fileA.hash, color: 'text-neon-blue' }, { label: 'File B SHA-256', hash: fileB.hash, color: 'text-neon-purple' }].map(({ label, hash, color }) => (
                   <div key={label} className="bg-dark-bg/50 rounded-lg p-3">
                     <div className="text-xs text-gray-500 mb-1">{label}</div>
                     <div className={`text-xs font-mono ${color} break-all leading-5`}>
-                      {/* Highlight matching chars */}
                       {hash.split('').map((char, i) => (
                         <span key={i} className={fileA.hash![i] === fileB.hash![i] ? 'opacity-100' : 'opacity-30'}>
                           {char}
@@ -225,8 +194,6 @@ export default function CompareSection() {
                   </div>
                 ))}
               </div>
-
-              {/* Similarity meter */}
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-gray-500">Hash Similarity Score</span>

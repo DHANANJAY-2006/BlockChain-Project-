@@ -1,17 +1,14 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { Activity, Shield, AlertTriangle, Eye, Zap, Server, Clock, Database, Info } from 'lucide-react';
 import { getBlockchain } from '@/lib/blockchain';
 import { Transaction } from '@/lib/types';
-
 export default function StatsSection() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [totalBlocks, setTotalBlocks] = useState(0);
   const [authentic, setAuthentic] = useState(0);
   const [deepfake, setDeepfake] = useState(0);
   const [suspicious, setSuspicious] = useState(0);
-
   const refresh = () => {
     const bc = getBlockchain();
     const stats = bc.getNetworkStats();
@@ -22,15 +19,12 @@ export default function StatsSection() {
     setDeepfake(stats.deepfakeCount);
     setSuspicious(stats.suspiciousCount);
   };
-
   useEffect(() => {
     refresh();
     const interval = setInterval(refresh, 4000);
     return () => clearInterval(interval);
   }, []);
-
   const total = transactions.length;
-
   const formatTime = (ts: number) => {
     const diff = Date.now() - ts;
     const secs = Math.floor(diff / 1000);
@@ -42,20 +36,16 @@ export default function StatsSection() {
     if (secs > 5) return `${secs}s ago`;
     return 'Just now';
   };
-
   const EmptyPlaceholder = ({ message }: { message: string }) => (
     <div className="text-center py-8 text-xs text-gray-600">
       <Info className="w-6 h-6 mx-auto mb-2 text-gray-700" />
       {message}
     </div>
   );
-
   return (
     <section id="stats" className="relative py-24">
       <div className="absolute inset-0 bg-gradient-to-b from-dark-bg to-dark-card" />
-
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 glass neon-border-blue px-4 py-2 rounded-full text-sm mb-6">
             <Activity className="w-4 h-4 text-neon-blue animate-pulse" />
@@ -69,8 +59,6 @@ export default function StatsSection() {
             All data shown here comes directly from your session's blockchain. Verify media to see stats populate.
           </p>
         </div>
-
-        {/* Summary cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             {
@@ -115,8 +103,6 @@ export default function StatsSection() {
             </div>
           ))}
         </div>
-
-        {/* Network metrics */}
         <div className="grid sm:grid-cols-3 gap-4 mb-8">
           {[
             { icon: Zap, label: 'Network Hashrate', value: '1,347 TH/s', desc: 'Combined validator power', color: 'neon-blue' },
@@ -133,10 +119,7 @@ export default function StatsSection() {
             </div>
           ))}
         </div>
-
-        {/* Charts + transactions */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          {/* Detection breakdown */}
           <div className="glass neon-border-blue rounded-2xl p-6">
             <h3 className="text-sm font-bold text-neon-blue mb-4 flex items-center gap-2">
               <Shield className="w-4 h-4" />
@@ -170,7 +153,6 @@ export default function StatsSection() {
                     </div>
                   );
                 })}
-
                 <div className="pt-3 border-t border-dark-border flex justify-around">
                   {[
                     { label: 'Authentic', val: total ? Math.round((authentic / total) * 100) : 0, color: 'text-neon-green' },
@@ -186,8 +168,6 @@ export default function StatsSection() {
               </div>
             )}
           </div>
-
-          {/* Recent transactions */}
           <div className="glass neon-border-purple rounded-2xl p-6">
             <h3 className="text-sm font-bold text-neon-purple mb-4 flex items-center gap-2">
               <Activity className="w-4 h-4" />
@@ -220,8 +200,6 @@ export default function StatsSection() {
             )}
           </div>
         </div>
-
-        {/* Bottom feature highlights */}
         <div className="grid sm:grid-cols-3 gap-4">
           {[
             {

@@ -1,7 +1,5 @@
 'use client';
-
 import { Shield, Brain, Lock, Eye, Zap, Globe, Award, Users } from 'lucide-react';
-
 const features = [
   {
     icon: Brain,
@@ -46,20 +44,16 @@ const features = [
     stats: '12+ formats',
   },
 ];
-
 const colorMap: Record<string, { text: string; border: string; bg: string }> = {
   'neon-blue': { text: 'text-neon-blue', border: 'neon-border-blue', bg: 'bg-neon-blue/10' },
   'neon-purple': { text: 'text-neon-purple', border: 'neon-border-purple', bg: 'bg-neon-purple/10' },
   'neon-green': { text: 'text-neon-green', border: 'neon-border-green', bg: 'bg-neon-green/10' },
 };
-
 export default function FeaturesSection() {
   return (
     <section className="relative py-24 cyber-grid-bg">
       <div className="absolute inset-0 bg-gradient-to-b from-dark-card/30 to-dark-bg" />
-
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 glass neon-border-blue px-4 py-2 rounded-full text-sm mb-6">
             <Award className="w-4 h-4 text-neon-blue" />
@@ -74,8 +68,6 @@ export default function FeaturesSection() {
             Advanced technology stack combining state-of-the-art AI with the immutability of blockchain
           </p>
         </div>
-
-        {/* Features grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {features.map((feature) => {
             const colors = colorMap[feature.color];
@@ -101,8 +93,6 @@ export default function FeaturesSection() {
             );
           })}
         </div>
-
-
       </div>
     </section>
   );

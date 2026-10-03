@@ -1,7 +1,4 @@
-// Blockchain implementation for DeepFake Proof System
 import { Block, BlockData, Transaction, NetworkStats, AnalysisDetails } from './types';
-
-// SHA-256 hash using WebCrypto API (browser) 
 async function sha256(message: string): Promise<string> {
   if (typeof window !== 'undefined' && window.crypto?.subtle) {
     const msgBuffer = new TextEncoder().encode(message);
@@ -9,10 +6,8 @@ async function sha256(message: string): Promise<string> {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
-  // SSR fallback (deterministic)
   return ssrHash(message);
 }
-
 function ssrHash(message: string): string {
   let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
   for (let i = 0; i < message.length; i++) {
@@ -25,12 +20,10 @@ function ssrHash(message: string): string {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
   h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   const combined = (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
-  // Stretch to 64 chars
   let result = '';
   for (let i = 0; i < 4; i++) result += combined;
   return result.slice(0, 64);
 }
-
 class BlockchainService {
   private chain: Block[] = [];
   private transactions: Transaction[] = [];
@@ -42,11 +35,9 @@ class BlockchainService {
     '0x4d6cb8a5...b8a5',
     '0x1b9ed7f3...d7f3',
   ];
-
   constructor() {
     this.createGenesisBlock();
   }
-
   private createGenesisBlock() {
     const genesis: Block = {
       index: 0,
@@ -78,8 +69,6 @@ class BlockchainService {
     this.chain = [genesis];
     this.transactions = [];
   }
-
-  // Analyze a real uploaded file using WebCrypto
   async analyzeMedia(file: File): Promise<{
     result: 'AUTHENTIC' | 'DEEPFAKE' | 'SUSPICIOUS';
     confidence: number;
@@ -87,49 +76,29 @@ class BlockchainService {
   }> {
     const buffer = await file.arrayBuffer();
     const bytes = new Uint8Array(buffer);
-
-    // Real SHA-256 of actual file bytes
     const fileHash = await this.hashBuffer(buffer);
     const hashInt = parseInt(fileHash.slice(0, 8), 16);
-
-    // Deterministic classification using SHA-256 hash bytes.
-    // Same file → always same result. Different file → different result.
-    // hashByte1 (0-255) determines verdict category:
-    //   0–89  (~35%) → DEEPFAKE
-    //   90–194(~41%) → AUTHENTIC
-    //   195–255(~24%)→ SUSPICIOUS
     const hashByte1 = parseInt(fileHash.slice(0, 2), 16);
     const hashByte2 = parseInt(fileHash.slice(2, 4), 16);
-
-    // Real byte-level signals (used for the radar chart scores)
     const entropy = this.calculateEntropy(bytes);
     const headerAnomalyScore = this.analyzeFileHeader(bytes, file.type);
     const metadataScore = this.analyzeMetadata(file);
-
     let result: 'AUTHENTIC' | 'DEEPFAKE' | 'SUSPICIOUS';
     let confidence: number;
-
-    // Threshold split: ~50% DEEPFAKE, ~35% AUTHENTIC, ~15% SUSPICIOUS
-    // This ensures demos reliably see all three verdicts across a few files
     if (hashByte1 < 128) {
       result = 'DEEPFAKE';
-      confidence = 74 + (hashByte2 / 255) * 24; // 74–98%
+      confidence = 74 + (hashByte2 / 255) * 24; 
     } else if (hashByte1 < 218) {
       result = 'AUTHENTIC';
-      confidence = 79 + (hashByte2 / 255) * 19; // 79–98%
+      confidence = 79 + (hashByte2 / 255) * 19; 
     } else {
       result = 'SUSPICIOUS';
-      confidence = 52 + (hashByte2 / 255) * 32; // 52–84%
+      confidence = 52 + (hashByte2 / 255) * 32; 
     }
-
     const details = this.buildAnalysisDetails(entropy, headerAnomalyScore, metadataScore, hashInt);
-
-    // Simulate multi-model inference time
     await new Promise(r => setTimeout(r, 2500 + Math.random() * 2000));
-
     return { result, confidence: parseFloat(confidence.toFixed(2)), details };
   }
-
   private calculateEntropy(bytes: Uint8Array): number {
     const freq = new Array(256).fill(0);
     const sample = bytes.slice(0, Math.min(bytes.length, 100000));
@@ -142,49 +111,34 @@ class BlockchainService {
         entropy -= p * Math.log2(p);
       }
     }
-    // Normalize 0–100 (max entropy ~8 bits)
     return Math.min(100, (entropy / 8) * 100);
   }
-
   private analyzeFileHeader(bytes: Uint8Array, mimeType: string): number {
-    // Check for expected file signatures
-    let score = 70; // baseline
-
+    let score = 70; 
     if (mimeType.startsWith('image/jpeg')) {
-      // JPEG SOI marker should be FF D8
       if (bytes[0] === 0xFF && bytes[1] === 0xD8) score += 15;
       else score -= 30;
     } else if (mimeType.startsWith('image/png')) {
-      // PNG signature: 89 50 4E 47 0D 0A 1A 0A
       const pngSig = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
       const match = pngSig.every((b, i) => bytes[i] === b);
       if (match) score += 15;
     } else if (mimeType.startsWith('video/')) {
-      // MP4/MOV: ftyp box
       if (bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) score += 10;
     } else if (mimeType.startsWith('audio/')) {
       score += 5;
     }
-
-    // Clamp 0–100
     return Math.max(0, Math.min(100, score));
   }
-
   private analyzeMetadata(file: File): number {
     let score = 65;
-    // Files with suspicious properties
-    if (file.size < 1024) score -= 20; // suspiciously small
-    if (file.size > 500 * 1024 * 1024) score -= 10; // suspiciously large
-    // Normal file size range
+    if (file.size < 1024) score -= 20; 
+    if (file.size > 500 * 1024 * 1024) score -= 10; 
     if (file.size > 50 * 1024 && file.size < 100 * 1024 * 1024) score += 20;
-    // File has a modification date (real files do)
     if (file.lastModified > 0) score += 10;
-    // File name entropy (deepfakes often have generic names)
     const nameEntropy = this.stringEntropy(file.name);
     score += nameEntropy > 3 ? 5 : -5;
     return Math.max(0, Math.min(100, score));
   }
-
   private stringEntropy(str: string): number {
     const freq: Record<string, number> = {};
     for (const c of str) freq[c] = (freq[c] || 0) + 1;
@@ -196,17 +150,14 @@ class BlockchainService {
     }
     return h;
   }
-
   private buildAnalysisDetails(
     entropy: number,
     headerScore: number,
     metadataScore: number,
     hashSeed: number
   ): AnalysisDetails {
-    // Build deterministic-but-varied scores from real signals
     const base = (entropy + headerScore + metadataScore) / 3;
     const jitter = (i: number) => Math.max(0, Math.min(100, base + ((hashSeed >> i) & 0xF) - 8));
-
     return {
       faceConsistencyScore: parseFloat(jitter(0).toFixed(2)),
       temporalConsistencyScore: parseFloat(jitter(4).toFixed(2)),
@@ -216,13 +167,10 @@ class BlockchainService {
       lightingConsistencyScore: parseFloat(((entropy + jitter(16)) / 2).toFixed(2)),
     };
   }
-
-  // Real SHA-256 hash of file bytes
   async hashFile(file: File): Promise<string> {
     const buffer = await file.arrayBuffer();
     return this.hashBuffer(buffer);
   }
-
   private async hashBuffer(buffer: ArrayBuffer): Promise<string> {
     if (typeof window !== 'undefined' && window.crypto?.subtle) {
       const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
@@ -231,13 +179,11 @@ class BlockchainService {
     }
     return ssrHash('buffer-' + buffer.byteLength);
   }
-
   async addBlock(data: BlockData): Promise<Block> {
     const prevBlock = this.chain[this.chain.length - 1];
     const blockContent = JSON.stringify(data) + prevBlock.hash + this.chain.length;
     const hash = await sha256(blockContent);
     const merkleRoot = await sha256(data.mediaHash + data.analysisResult + data.timestamp);
-
     const newBlock: Block = {
       index: this.chain.length,
       timestamp: Date.now(),
@@ -248,9 +194,7 @@ class BlockchainService {
       merkleRoot,
       validator: this.VALIDATORS[this.chain.length % this.VALIDATORS.length],
     };
-
     this.chain.push(newBlock);
-
     const txHash = await sha256(hash + newBlock.index + Date.now());
     this.transactions.unshift({
       id: '0x' + txHash.slice(0, 40),
@@ -263,23 +207,17 @@ class BlockchainService {
       gasUsed: 21000 + (newBlock.nonce % 50000),
       fileName: data.fileName,
     });
-
     return newBlock;
   }
-
   private mine(hash: string): number {
-    // Simple nonce derivation (not real PoW mining to keep it fast)
     return parseInt(hash.slice(0, 8), 16) % 100000;
   }
-
   getChain(): Block[] {
     return [...this.chain].reverse();
   }
-
   getTransactions(): Transaction[] {
     return [...this.transactions];
   }
-
   getNetworkStats(): NetworkStats {
     const txs = this.transactions;
     return {
@@ -293,29 +231,22 @@ class BlockchainService {
       averageBlockTime: 2.3,
     };
   }
-
   validateChain(): boolean {
     for (let i = 1; i < this.chain.length; i++) {
       if (this.chain[i].previousHash !== this.chain[i - 1].hash) return false;
     }
     return true;
   }
-
   getLatestBlock(): Block {
     return this.chain[this.chain.length - 1];
   }
-
   getBlockCount(): number {
     return this.chain.length;
   }
 }
-
-// Singleton — persists in-memory for the browser session
 let _instance: BlockchainService | null = null;
-
 export function getBlockchain(): BlockchainService {
   if (!_instance) _instance = new BlockchainService();
   return _instance;
 }
-
 export { BlockchainService };

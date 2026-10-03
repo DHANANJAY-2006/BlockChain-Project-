@@ -1,35 +1,28 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Shield, Menu, X, Zap, ChevronRight } from 'lucide-react';
-
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
   const navLinks = [
     { href: '#home', label: 'Home' },
     { href: '#verify', label: 'Verify' },
     { href: '#compare', label: 'Compare' },
-    { href: '#threat-feed', label: 'Threat Feed' },
     { href: '#blockchain', label: 'Explorer' },
     { href: '#stats', label: 'Stats' },
   ];
-
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
       isScrolled ? 'glass-strong shadow-lg shadow-black/50' : 'bg-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden bg-white/5 border border-white/10">
@@ -42,8 +35,6 @@ export default function Navbar() {
               <div className="text-xs text-gray-500 font-mono">v2.1.0 MAINNET</div>
             </div>
           </div>
-
-          {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
               <a
@@ -56,8 +47,6 @@ export default function Navbar() {
               </a>
             ))}
           </div>
-
-          {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
             <a
               href="#verify"
@@ -74,8 +63,6 @@ export default function Navbar() {
               <ChevronRight className="w-4 h-4" />
             </a>
           </div>
-
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg glass neon-border-blue"
@@ -84,8 +71,6 @@ export default function Navbar() {
           </button>
         </div>
       </div>
-
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="lg:hidden glass-strong border-t border-dark-border">
           <div className="px-4 py-4 space-y-3">

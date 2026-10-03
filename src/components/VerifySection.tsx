@@ -1,14 +1,11 @@
 'use client';
-
 import { useState, useCallback, useRef } from 'react';
 import { Upload, File, X, Shield, AlertTriangle, CheckCircle, Loader2, Hash, Cpu, Eye, Award, Download, ExternalLink } from 'lucide-react';
 import { getBlockchain } from '@/lib/blockchain';
 import { Block, BlockData, AnalysisDetails } from '@/lib/types';
 import RadarChart from './RadarChart';
-
 type AnalysisState = 'idle' | 'uploading' | 'hashing' | 'analyzing' | 'writing' | 'done';
 type AnalysisResult = 'AUTHENTIC' | 'DEEPFAKE' | 'SUSPICIOUS';
-
 interface AnalysisData {
   result: AnalysisResult;
   confidence: number;
@@ -16,14 +13,12 @@ interface AnalysisData {
   block: Block;
   details: AnalysisDetails;
 }
-
 const ANALYSIS_STEPS = [
   { id: 'uploading', icon: Upload, label: 'Buffer Read', desc: 'Reading raw file bytes into memory' },
   { id: 'hashing', icon: Hash, label: 'SHA-256', desc: 'Computing cryptographic fingerprint' },
   { id: 'analyzing', icon: Cpu, label: 'AI Inference', desc: 'Running 6-model neural analysis' },
   { id: 'writing', icon: Shield, label: 'Blockchain', desc: 'Sealing result on immutable ledger' },
 ];
-
 export default function VerifySection() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -33,7 +28,6 @@ export default function VerifySection() {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [showCertificate, setShowCertificate] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('video/') && !file.type.startsWith('image/') && !file.type.startsWith('audio/')) {
       alert('Please upload a video, image, or audio file');
@@ -50,14 +44,12 @@ export default function VerifySection() {
       setPreviewUrl(null);
     }
   }, []);
-
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
   }, [handleFile]);
-
   const startAnalysis = async () => {
     if (!selectedFile) return;
     const blockchain = getBlockchain();
@@ -65,21 +57,17 @@ export default function VerifySection() {
       setAnalysisState('uploading');
       setProgress(8);
       await new Promise(r => setTimeout(r, 700));
-
       setAnalysisState('hashing');
       setProgress(22);
       const mediaHash = await blockchain.hashFile(selectedFile);
       await new Promise(r => setTimeout(r, 900));
       setProgress(40);
-
       setAnalysisState('analyzing');
       setProgress(50);
       const analysis = await blockchain.analyzeMedia(selectedFile);
       setProgress(78);
-
       setAnalysisState('writing');
       setProgress(88);
-
       const blockData: BlockData = {
         mediaHash,
         analysisResult: analysis.result,
@@ -91,10 +79,8 @@ export default function VerifySection() {
         analysisDetails: analysis.details,
         submitterAddress: '0x' + mediaHash.slice(0, 40),
       };
-
       const block = await blockchain.addBlock(blockData);
       await new Promise(r => setTimeout(r, 1200));
-
       setProgress(100);
       setAnalysisState('done');
       setAnalysisData({ result: analysis.result, confidence: analysis.confidence, mediaHash, block, details: analysis.details });
@@ -103,7 +89,6 @@ export default function VerifySection() {
       setAnalysisState('idle');
     }
   };
-
   const reset = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -113,7 +98,6 @@ export default function VerifySection() {
     setShowCertificate(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
-
   const getResultConfig = (result: AnalysisResult) => {
     switch (result) {
       case 'AUTHENTIC': return { icon: CheckCircle, color: 'text-neon-green', border: 'neon-border-green', badge: 'status-verified', bg: 'bg-neon-green/5', barColor: 'bg-neon-green' };
@@ -121,15 +105,12 @@ export default function VerifySection() {
       case 'SUSPICIOUS': return { icon: Eye, color: 'text-yellow-400', border: 'border border-yellow-500/40', badge: 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400', bg: 'bg-yellow-500/5', barColor: 'bg-yellow-400' };
     }
   };
-
   const formatBytes = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   };
-
   const formatHash = (hash: string) => `${hash.slice(0, 14)}...${hash.slice(-10)}`;
-
   const radarScores = analysisData ? [
     { label: 'Face', value: analysisData.details.faceConsistencyScore },
     { label: 'Temporal', value: analysisData.details.temporalConsistencyScore },
@@ -138,15 +119,11 @@ export default function VerifySection() {
     { label: 'Compress', value: analysisData.details.compressionAnomalyScore },
     { label: 'Lighting', value: analysisData.details.lightingConsistencyScore },
   ] : [];
-
   const stateOrder: AnalysisState[] = ['uploading', 'hashing', 'analyzing', 'writing', 'done'];
-
   return (
     <section id="verify" className="relative py-24 cyber-grid-bg">
       <div className="absolute inset-0 bg-gradient-to-b from-dark-bg via-dark-card/40 to-dark-bg" />
-
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="text-center mb-14">
           <div className="inline-flex items-center gap-2 glass neon-border-blue px-4 py-2 rounded-full text-sm mb-6">
             <Shield className="w-4 h-4 text-neon-blue" />
@@ -160,9 +137,7 @@ export default function VerifySection() {
             Drop any video, image, or audio file. AI runs 6 detection models and permanently seals the result on the blockchain.
           </p>
         </div>
-
         <div className="grid lg:grid-cols-5 gap-6">
-          {/* Left: Upload + steps */}
           <div className="lg:col-span-2">
             {!selectedFile ? (
               <div
@@ -210,7 +185,6 @@ export default function VerifySection() {
                     <X className="w-4 h-4 text-gray-400" />
                   </button>
                 </div>
-
                 <div className="p-5">
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 glass neon-border-blue rounded-lg flex items-center justify-center flex-shrink-0">
@@ -221,8 +195,6 @@ export default function VerifySection() {
                       <p className="text-xs text-gray-500">{formatBytes(selectedFile.size)} • {selectedFile.type.split('/')[1]?.toUpperCase() || 'FILE'}</p>
                     </div>
                   </div>
-
-                  {/* Progress bar */}
                   {analysisState !== 'idle' && analysisState !== 'done' && (
                     <div className="mb-5">
                       <div className="w-full h-2 bg-dark-border rounded-full overflow-hidden mb-1">
@@ -234,8 +206,6 @@ export default function VerifySection() {
                       </div>
                     </div>
                   )}
-
-                  {/* Step indicators */}
                   {analysisState !== 'idle' && (
                     <div className="space-y-2 mb-5">
                       {ANALYSIS_STEPS.map(step => {
@@ -258,7 +228,6 @@ export default function VerifySection() {
                       })}
                     </div>
                   )}
-
                   {analysisState === 'idle' && (
                     <button onClick={startAnalysis} className="btn-primary w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2">
                       <Shield className="w-5 h-5" />
@@ -269,8 +238,6 @@ export default function VerifySection() {
               </div>
             )}
           </div>
-
-          {/* Right: Results */}
           <div className="lg:col-span-3 space-y-4">
             {!analysisData ? (
               <div className="glass neon-border-blue rounded-2xl p-8 text-center min-h-72 flex flex-col items-center justify-center">
@@ -286,7 +253,6 @@ export default function VerifySection() {
                 const ResultIcon = config.icon;
                 return (
                   <div className="space-y-4">
-                    {/* Main verdict */}
                     <div className={`glass rounded-2xl p-6 ${config.border} ${config.bg}`}>
                       <div className="flex items-center gap-4 mb-5">
                         <ResultIcon className={`w-14 h-14 flex-shrink-0 ${config.color}`} />
@@ -295,7 +261,6 @@ export default function VerifySection() {
                           <div className="text-sm text-gray-400">Analysis complete — result sealed on blockchain</div>
                         </div>
                       </div>
-                      {/* Confidence */}
                       <div className="mb-2">
                         <div className="flex justify-between text-sm mb-1.5">
                           <span className="text-gray-400">AI Confidence Score</span>
@@ -305,7 +270,6 @@ export default function VerifySection() {
                           <div className={`h-full rounded-full transition-all duration-1000 ${config.barColor}`} style={{ width: `${analysisData.confidence}%` }} />
                         </div>
                       </div>
-                      {/* Blockchain record inline */}
                       <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-mono">
                         {[
                           { label: 'Block #', value: `#${analysisData.block.index}` },
@@ -322,8 +286,6 @@ export default function VerifySection() {
                         ))}
                       </div>
                     </div>
-
-                    {/* Radar Chart + Analysis Breakdown */}
                     <div className="glass neon-border-blue rounded-2xl p-5">
                       <h3 className="text-sm font-bold text-neon-blue mb-4 flex items-center gap-2">
                         <Cpu className="w-4 h-4" />
@@ -352,17 +314,12 @@ export default function VerifySection() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Certificate button */}
                     <button onClick={() => setShowCertificate(s => !s)} className="w-full glass neon-border-blue rounded-xl p-3.5 text-sm text-neon-blue flex items-center justify-between hover:bg-neon-blue/5 transition-colors font-bold">
                       <span className="flex items-center gap-2"><Award className="w-4 h-4" /> View Blockchain Certificate</span>
                       <ExternalLink className="w-4 h-4" />
                     </button>
-
-                    {/* Certificate */}
                     {showCertificate && (
                       <div className="glass border border-neon-blue/50 rounded-2xl p-6 relative overflow-hidden">
-                        {/* Background pattern */}
                         <div className="absolute inset-0 cyber-grid-bg opacity-30" />
                         <div className="relative z-10">
                           <div className="text-center mb-6 border-b border-dark-border pb-5">
@@ -370,14 +327,12 @@ export default function VerifySection() {
                             <h3 className="text-2xl font-black text-white mb-1">Certificate of Verification</h3>
                             <div className="text-xs text-gray-500">Cryptographically secured • Tamper-proof • Publicly verifiable</div>
                           </div>
-
                           <div className={`text-center py-4 px-6 rounded-xl mb-5 ${config.bg} border ${config.color.replace('text-', 'border-').replace('neon-', 'neon-')}`}>
                             <div className={`text-4xl font-black font-mono ${config.color}`}>
                               {analysisData.result === 'DEEPFAKE' ? '⚠ DEEPFAKE' : analysisData.result === 'AUTHENTIC' ? '✓ AUTHENTIC' : '? SUSPICIOUS'}
                             </div>
                             <div className="text-sm text-gray-400 mt-1">AI Confidence: <strong className={config.color}>{analysisData.confidence.toFixed(2)}%</strong></div>
                           </div>
-
                           <div className="space-y-2 text-xs font-mono mb-5">
                             {[
                               { label: 'FILE NAME', value: analysisData.block.data.fileName },
@@ -395,14 +350,12 @@ export default function VerifySection() {
                               </div>
                             ))}
                           </div>
-
                           <div className="text-center text-xs text-gray-600 pt-2">
                             <div className="font-mono">CHAINPROOF v2.1 • SHA-256 • PoA Consensus • Verified on {new Date().toLocaleDateString()}</div>
                           </div>
                         </div>
                       </div>
                     )}
-
                     <button onClick={reset} className="btn-secondary w-full py-3 rounded-xl text-sm font-bold">
                       Verify Another File
                     </button>
