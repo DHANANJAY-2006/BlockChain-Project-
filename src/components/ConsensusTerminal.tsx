@@ -5,7 +5,7 @@ import { Terminal, Activity, Cpu, Network, Database, Lock } from 'lucide-react';
 
 export default function ConsensusTerminal() {
   const [logs, setLogs] = useState<string[]>([]);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const terminalRef = useRef<HTMLDivElement>(null);
 
   // Generate realistic looking cryptographic logs
   useEffect(() => {
@@ -50,7 +50,9 @@ export default function ConsensusTerminal() {
   }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
   }, [logs]);
 
   return (
@@ -69,7 +71,7 @@ export default function ConsensusTerminal() {
       </div>
 
       {/* Terminal Body */}
-      <div className="p-4 flex-1 overflow-y-auto bg-black/40 font-mono text-xs leading-relaxed font-medium">
+      <div ref={terminalRef} className="p-4 flex-1 overflow-y-auto bg-black/40 font-mono text-xs leading-relaxed font-medium">
         {logs.map((log, i) => {
           let colorClass = 'text-gray-400';
           if (log.includes('Consensus Reached')) colorClass = 'text-neon-green font-bold';
@@ -85,7 +87,6 @@ export default function ConsensusTerminal() {
             </div>
           );
         })}
-        <div ref={bottomRef} />
       </div>
 
       {/* Network Metrics Footer */}
