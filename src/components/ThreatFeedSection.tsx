@@ -5,66 +5,38 @@ import {
   AlertTriangle, Radio, Globe, Zap
 } from 'lucide-react';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface SimEvent {
-  id: string;
-  time: string;
-  country: string;
-  type: string;
-  result: 'DEEPFAKE' | 'AUTHENTIC' | 'SUSPICIOUS';
-  confidence: number;
-}
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const TYPES = ['Political Speech', 'Celebrity Video', 'News Broadcast', 'Social Media Clip', 'Product Ad', 'Interview', 'Documentary'];
-const COUNTRIES = ['US', 'UK', 'IN', 'DE', 'BR', 'JP', 'FR', 'CA', 'AU', 'KR', 'CN', 'NG'];
-
-function rndHex(n: number) {
-  return Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-}
-
-function makeSimEvent(): SimEvent {
-  const roll = Math.random();
-  const result: SimEvent['result'] = roll < 0.45 ? 'DEEPFAKE' : roll < 0.78 ? 'AUTHENTIC' : 'SUSPICIOUS';
-  return {
-    id: rndHex(8),
-    time: new Date().toLocaleTimeString('en-US', { hour12: false }),
-    country: COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)],
-    type: TYPES[Math.floor(Math.random() * TYPES.length)],
-    result,
-    confidence: result === 'DEEPFAKE'
-      ? 74 + Math.random() * 24
-      : result === 'AUTHENTIC'
-      ? 79 + Math.random() * 19
-      : 52 + Math.random() * 30,
-  };
-}
 
 // ─── Component ────────────────────────────────────────────────────────────────
+import { getBlockchain } from '@/lib/blockchain';
+import { Transaction } from '@/lib/types';
+
 export default function ThreatFeedSection() {
-  const [simEvents, setSimEvents] = useState<SimEvent[]>(() =>
-    Array.from({ length: 10 }, makeSimEvent)
-  );
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dfCount, setDfCount] = useState(0);
-  const [totalCount, setTotalCount] = useState(10);
 
-  // ── Simulated live detection stream ──────────────────────────────────────────
   useEffect(() => {
-    setDfCount(simEvents.filter(e => e.result === 'DEEPFAKE').length);
+    // Poll the genuine local blockchain for new transactions
+    const refresh = () => {
+      const bc = getBlockchain();
+      const txs = bc.getTransactions();
+      setTransactions(txs);
+      setDfCount(txs.filter(t => t.result === 'DEEPFAKE').length);
+    };
 
-    const interval = setInterval(() => {
-      const ev = makeSimEvent();
-      setSimEvents(prev => [ev, ...prev.slice(0, 24)]);
-      if (ev.result === 'DEEPFAKE') setDfCount(c => c + 1);
-      setTotalCount(c => c + 1);
-    }, 4000);
+    refresh();
+    const interval = setInterval(refresh, 2000);
     return () => clearInterval(interval);
-  }, []); // eslint-disable-line
+  }, []);
 
-  const getStyle = (r: SimEvent['result']) => {
+  const getStyle = (r: Transaction['result']) => {
     if (r === 'DEEPFAKE') return { dot: 'bg-red-400', text: 'text-red-400' };
     if (r === 'AUTHENTIC') return { dot: 'bg-neon-green', text: 'text-neon-green' };
     return { dot: 'bg-yellow-400', text: 'text-yellow-400' };
+  };
+
+  const formatTime = (ts: number) => {
+    return new Date(ts).toLocaleTimeString('en-US', { hour12: false });
   };
 
   return (
@@ -96,9 +68,9 @@ export default function ThreatFeedSection() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-              <h3 className="text-sm font-bold text-white font-mono">LIVE DETECTION SIMULATION</h3>
+              <h3 className="text-sm font-bold text-white font-mono">GLOBAL NETWORK FEED</h3>
               <span className="text-xs text-gray-600 font-mono border border-dark-border px-2 py-0.5 rounded">
-                Simulated — updates every 4s
+                Live blockchain verifications
               </span>
             </div>
 
@@ -106,32 +78,38 @@ export default function ThreatFeedSection() {
               {/* Table header */}
               <div className="grid grid-cols-5 gap-2 px-4 py-2.5 bg-dark-border/30 text-xs font-mono text-gray-500 border-b border-dark-border">
                 <span>TIME</span>
-                <span>REGION</span>
-                <span>MEDIA TYPE</span>
+                <span>TX HASH</span>
+                <span>FILE NAME</span>
                 <span>VERDICT</span>
                 <span>CONFIDENCE</span>
               </div>
               <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
-                {simEvents.map((ev, idx) => {
-                  const s = getStyle(ev.result);
-                  return (
-                    <div
-                      key={ev.id + idx}
-                      className={`grid grid-cols-5 gap-2 px-4 py-2.5 border-b border-dark-border/30 text-xs font-mono hover:bg-dark-border/20 transition-colors ${idx === 0 ? 'bg-neon-blue/5' : ''}`}
-                    >
-                      <span className="text-gray-500">{ev.time}</span>
-                      <span className="text-gray-400 flex items-center gap-1">
-                        <Globe className="w-3 h-3 text-gray-600" /> {ev.country}
-                      </span>
-                      <span className="text-gray-400 truncate">{ev.type}</span>
-                      <span className={`flex items-center gap-1 font-bold ${s.text}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                        {ev.result}
-                      </span>
-                      <span className={`font-bold ${s.text}`}>{ev.confidence.toFixed(1)}%</span>
-                    </div>
-                  );
-                })}
+                {transactions.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 font-mono text-sm">
+                    Awaiting network activity. Verify a file to add it to the ledger.
+                  </div>
+                ) : (
+                  transactions.map((tx, idx) => {
+                    const s = getStyle(tx.result);
+                    return (
+                      <div
+                        key={tx.id + idx}
+                        className={`grid grid-cols-5 gap-2 px-4 py-2.5 border-b border-dark-border/30 text-xs font-mono hover:bg-dark-border/20 transition-colors ${idx === 0 ? 'bg-neon-blue/5' : ''}`}
+                      >
+                        <span className="text-gray-500">{formatTime(tx.timestamp)}</span>
+                        <span className="text-gray-400 flex items-center gap-1 truncate" title={tx.id}>
+                          <Globe className="w-3 h-3 text-gray-600" /> {tx.id.substring(0, 10)}...
+                        </span>
+                        <span className="text-gray-400 truncate" title={tx.fileName}>{tx.fileName}</span>
+                        <span className={`flex items-center gap-1 font-bold ${s.text}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                          {tx.result}
+                        </span>
+                        <span className={`font-bold ${s.text}`}>{tx.confidence.toFixed(1)}%</span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
@@ -145,9 +123,9 @@ export default function ThreatFeedSection() {
               </h3>
               <div className="space-y-3">
                 {[
-                  { label: 'Total Events', value: totalCount, color: 'text-neon-blue' },
+                  { label: 'Total Events', value: transactions.length, color: 'text-neon-blue' },
                   { label: 'Deepfakes', value: dfCount, color: 'text-red-400' },
-                  { label: 'Detection Rate', value: totalCount > 0 ? `${Math.round((dfCount / totalCount) * 100)}%` : '0%', color: 'text-neon-purple' },
+                  { label: 'Detection Rate', value: transactions.length > 0 ? `${Math.round((dfCount / transactions.length) * 100)}%` : '0%', color: 'text-neon-purple' },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="flex justify-between items-center">
                     <span className="text-xs text-gray-500">{label}</span>
@@ -162,8 +140,8 @@ export default function ThreatFeedSection() {
               <h3 className="text-sm font-bold text-neon-purple mb-4">VERDICT BREAKDOWN</h3>
               <div className="space-y-3">
                 {(['DEEPFAKE', 'AUTHENTIC', 'SUSPICIOUS'] as const).map(r => {
-                  const count = simEvents.filter(e => e.result === r).length;
-                  const pct = simEvents.length > 0 ? Math.round((count / simEvents.length) * 100) : 0;
+                  const count = transactions.filter(e => e.result === r).length;
+                  const pct = transactions.length > 0 ? Math.round((count / transactions.length) * 100) : 0;
                   const colors = { DEEPFAKE: { text: 'text-red-400', bar: 'bg-red-500' }, AUTHENTIC: { text: 'text-neon-green', bar: 'bg-neon-green' }, SUSPICIOUS: { text: 'text-yellow-400', bar: 'bg-yellow-400' } };
                   return (
                     <div key={r}>
